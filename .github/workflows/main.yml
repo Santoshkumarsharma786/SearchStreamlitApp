@@ -24,6 +24,5 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote set-url origin git@github.com:Santoshkumarsharma786/SearchStreamlitApp.git
           git remote add hub https://santosh786sharma:$HF_TOKEN@huggingface.co/spaces/santosh786sharma/searchstreamlitapp
           git push hub main --force
