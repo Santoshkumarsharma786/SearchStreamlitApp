@@ -24,4 +24,4 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git push https://santosh786sharma:$HF_TOKEN@huggingface.co/spaces/santosh786sharma/searchstreamlitapp main
+          git push https://santosh786sharma:$HF_TOKEN@huggingface.co/spaces/santosh786sharma/searchstreamlitapp main --force
