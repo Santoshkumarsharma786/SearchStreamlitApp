@@ -1,7 +1,8 @@
 import streamlit as st
 from langchain_community.utilities import ArxivAPIWrapper,WikipediaAPIWrapper
 from langchain_community.tools import ArxivQueryRun,WikipediaQueryRun,DuckDuckGoSearchRun
-from langchain.agents import initialize_agent,AgentType
+from langchain.agents import create_react_agent, AgentExecutor
+from langchain import hub
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 from langchain_groq import ChatGroq
 import os
@@ -38,18 +39,25 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg['content'])
 
-if prompt:=st.chat_input(placeholder="What is machine learning?"):
-    st.session_state.messages.append({"role":"user","content":prompt})
-    st.chat_message("user").write(prompt)
+if input:=st.chat_input(placeholder="What is machine learning?"):
+    st.session_state.messages.append({"role":"user","content":input})
+    st.chat_message("user").write(input)
 
     llm=ChatGroq(groq_api_key=api_key,model_name="llama-3.3-70b-versatile",streaming=True)
     tools=[search,arxiv,wiki]
 
-    search_agent=initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,handling_parsing_errors=True)
+    # Get the react prompt from hub
+    prompt = hub.pull("hwchase17/react")
+    
+    # Create the react agent
+    agent = create_react_agent(llm, tools, prompt)
+    
+    # Create agent executor with error handling
+    search_agent = AgentExecutor(agent=agent, tools=tools, handle_parsing_errors=True, verbose=True)
 
     with st.chat_message("assistant"):
         st_cb=StreamlitCallbackHandler(st.container(),expand_new_thoughts=False)
-        response=search_agent.invoke(st.session_state.messages,callbacks=[st_cb])
-        st.session_state.messages.append({'role':'assistant',"content":response})
-        st.write(response)
+        response=search_agent.invoke({"input": input},callbacks=[st_cb])
+        st.session_state.messages.append({'role':'assistant',"content":response["output"]})
+        st.write(response["output"])
 
